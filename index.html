@@ -7,19 +7,72 @@
     <script type="importmap">
         {
             "imports": {
-                "bitmapit": "/node_modules/bitmapit/index.js"
+                "bitmapit": "./node_modules/bitmapit/index.js"
             }
         }
     </script>
     <style>
         body {
-            background-color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
             color: #fff;
             font-family: monospace;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .space-container {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            perspective: 1000px;
+            z-index: 0;
+            background-color: #000000;
+            cursor: move; /* Fallback */
+            cursor: grab;
+        }
+
+        .space-container.dragging {
+            cursor: grabbing;
+        }
+
+        .grid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            background-image: 
+                radial-gradient(circle at 0 0, rgba(64, 64, 64, 0.4) 1px, transparent 1px),
+                linear-gradient(rgba(64, 64, 64, 0.2) 3px, transparent 3px),
+                linear-gradient(90deg, rgba(64, 64, 64, 0.2) 1px, transparent 1px);
+            background-size: 
+                100px 100px,
+                100px 100px,
+                100px 100px;
+            background-position: 
+                0 0,
+                0 0,
+                0 0;
+            width: 1000vw;
+            height: 1000vh;
+            transform: translate(-50%, -50%);
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            min-height: 100vh;
+            pointer-events: none;
+        }
+
+        .content-wrapper > * {
+            pointer-events: auto;
         }
 
         .header {
@@ -48,14 +101,15 @@
             color: #fff;
             text-decoration: none;
             padding: 5px 10px;
-            border-radius: 4px;
-            background-color: #2a2a2a;
+            background-color: rgba(16, 16, 16, 0.95);
             font-size: 0.9em;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border: 1px solid rgba(48, 48, 48, 0.5);
         }
 
         .nav-links a:hover {
-            background-color: #3a3a3a;
+            background-color: rgba(24, 24, 24, 0.95);
+            border-color: rgba(64, 64, 64, 0.7);
         }
 
         @media (max-width: 600px) {
@@ -77,25 +131,26 @@
 
         #output, #codeOutput {
             white-space: pre;
-            background-color: #2a2a2a;
+            background-color: rgba(8, 8, 8, 0.95);
             padding: 20px;
-            border-radius: 8px;
             margin: 20px 0;
             overflow-x: auto;
             max-width: 90vw;
             width: 100%;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(48, 48, 48, 0.5);
         }
 
         #input, select, input[type="number"], input[type="color"] {
-            background-color: #2a2a2a;
+            background-color: rgba(8, 8, 8, 0.95);
             color: #fff;
-            border: 1px solid #3a3a3a;
+            border: 1px solid rgba(48, 48, 48, 0.5);
             padding: 10px;
-            border-radius: 4px;
             font-family: monospace;
             margin: 10px 0;
             width: calc(90vw - 40px);
             max-width: 600px;
+            backdrop-filter: blur(5px);
         }
 
         input[type="number"], input[type="color"] {
@@ -109,6 +164,9 @@
             justify-content: center;
             width: 90vw;
             max-width: 600px;
+            background-color: transparent;
+            padding: 20px;
+            border-radius: 0;
         }
 
         .settings-group {
@@ -125,26 +183,29 @@
         }
 
         button {
-            background-color: #4a4a4a;
+            background-color: rgba(12, 12, 12, 0.95);
             color: #fff;
-            border: none;
+            border: 1px solid rgba(48, 48, 48, 0.5);
             padding: 10px 20px;
-            border-radius: 4px;
             cursor: pointer;
             margin: 10px;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
         }
 
         button:hover {
-            background-color: #5a5a5a;
+            background-color: rgba(20, 20, 20, 0.95);
+            border-color: rgba(64, 64, 64, 0.7);
         }
 
         .copy-button {
             position: absolute;
             right: 10px;
             top: 10px;
-            background-color: #3a3a3a;
+            background-color: rgba(12, 12, 12, 0.95);
             padding: 5px 10px;
             font-size: 0.8em;
+            border: 1px solid rgba(48, 48, 48, 0.5);
         }
 
         .preset-texts {
@@ -153,105 +214,119 @@
             flex-wrap: wrap;
             justify-content: center;
             margin: 20px 0;
+            background-color: rgba(8, 8, 8, 0.95);
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(48, 48, 48, 0.5);
         }
 
         .preset-text {
-            background-color: #2a2a2a;
+            background-color: rgba(12, 12, 12, 0.95);
             color: #fff;
-            border: 1px solid #3a3a3a;
+            border: 1px solid rgba(48, 48, 48, 0.5);
             padding: 5px 10px;
-            border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
         }
 
         .preset-text:hover {
-            background-color: #3a3a3a;
+            background-color: rgba(20, 20, 20, 0.95);
+            border-color: rgba(64, 64, 64, 0.7);
         }
 
         .output-container {
             width: 90vw;
             max-width: 800px;
             overflow-x: auto;
-            background-color: #2a2a2a;
-            border-radius: 8px;
             margin: 20px 0;
             position: relative;
+        }
+
+        select:focus, input:focus, button:focus {
+            outline: none;
+            border-color: rgba(64, 64, 64, 0.7);
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <pre class="logo">
+    <div class="space-container">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="content-wrapper">
+        <header class="header">
+            <pre class="logo">
 ██████╗ ██╗████████╗███╗   ███╗██████╗ ██████╗ ██╗████████╗
 ██╔══██╗██║╚══██╔══╝████╗ ████║██╔══██╗██╔══██╗██║╚══██╔══╝
 ██████╔╝██║   ██║   ██╔████╔██║███████║██████╔╝██║   ██║   
 ██╔══██╗██║   ██║   ██║╚██╔╝██║██╔══██║██╔═══╝ ██║   ██║   
 ██║  ██║██║   ██║   ██║ ╚═╝ ██║██║  ██║██║     ██║   ██║   
 ██████╔╝╚═╝   ╚═╝   ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝   ╚═╝</pre>
-        <div class="nav-links">
-            <a href=".././docs">Documentation</a>
-            <a href="https://github.com/OmPreetham/bitmapit" target="_blank">GitHub</a>
-        </div>
-    </header>
+            <div class="nav-links">
+                <a href="https://github.com/OmPreetham/bitmapit" target="_blank">GitHub</a>
+            </div>
+        </header>
 
-    <input type="text" id="input" placeholder="Type your text here..." value="HELLO WORLD!">
-    
-    <div class="controls">
-        <div class="settings-group">
-            <label>Character:</label>
-            <select id="displayStyle" onchange="updateDisplay()">
-                <option value="█ ">Solid Block (█)</option>
-                <option value="▀ ">Upper Block (▀)</option>
-                <option value="▄ ">Lower Block (▄)</option>
-                <option value="■ ">Square (■)</option>
-                <option value="● ">Circle (●)</option>
-                <option value="* ">Asterisk (*)</option>
-                <option value="# ">Hash (#)</option>
-            </select>
+        <input type="text" id="input" placeholder="Type your text here..." value="HELLO WORLD!">
+        
+        <div class="controls">
+            <div class="settings-group">
+                <label>Character:</label>
+                <select id="displayStyle" onchange="updateDisplay()">
+                    <option value="█ ">Solid Block (█)</option>
+                    <option value="▀ ">Upper Block (▀)</option>
+                    <option value="▄ ">Lower Block (▄)</option>
+                    <option value="■ ">Square (■)</option>
+                    <option value="● ">Circle (●)</option>
+                    <option value="* ">Asterisk (*)</option>
+                    <option value="# ">Hash (#)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <label>Width:</label>
+                <input type="number" id="fontWidth" value="8" min="4" max="16" onchange="updateFontSize()">
+            </div>
+            <div class="settings-group">
+                <label>Height:</label>
+                <input type="number" id="fontHeight" value="8" min="4" max="16" onchange="updateFontSize()">
+            </div>
+            <div class="settings-group">
+                <label>Spacing:</label>
+                <input type="number" id="fontSpacing" value="1" min="0" max="4" onchange="updateFontSize()">
+            </div>
+            <div class="settings-group">
+                <label>Color:</label>
+                <input type="color" id="fontColor" value="#ffffff" onchange="updateDisplay()">
+            </div>
+            <div class="settings-group">
+                <button onclick="generateText()">Generate</button>
+                <button onclick="showExamples()">Show Examples</button>
+            </div>
         </div>
-        <div class="settings-group">
-            <label>Width:</label>
-            <input type="number" id="fontWidth" value="8" min="4" max="16" onchange="updateFontSize()">
-        </div>
-        <div class="settings-group">
-            <label>Height:</label>
-            <input type="number" id="fontHeight" value="8" min="4" max="16" onchange="updateFontSize()">
-        </div>
-        <div class="settings-group">
-            <label>Spacing:</label>
-            <input type="number" id="fontSpacing" value="1" min="0" max="4" onchange="updateFontSize()">
-        </div>
-        <div class="settings-group">
-            <label>Color:</label>
-            <input type="color" id="fontColor" value="#ffffff" onchange="updateDisplay()">
-        </div>
-        <div class="settings-group">
-            <button onclick="generateText()">Generate</button>
-            <button onclick="showExamples()">Show Examples</button>
-        </div>
-    </div>
 
-    <div class="preset-texts">
-        <span class="preset-text" onclick="setPresetText('AWESOME!')">AWESOME!</span>
-        <span class="preset-text" onclick="setPresetText('BITMAP FONTS')">BITMAP FONTS</span>
-        <span class="preset-text" onclick="setPresetText('COOL TEXT!')">COOL TEXT!</span>
-        <span class="preset-text" onclick="setPresetText('12345')">12345</span>
-        <span class="preset-text" onclick="setPresetText('HELLO 2024!')">HELLO 2024!</span>
-        <span class="preset-text" onclick="setPresetText('@#$%&*')">@#$%&*</span>
-        <span class="preset-text" onclick="setPresetText('(^_^)')">HAPPY</span>
-        <span class="preset-text" onclick="setPresetText('☺☹')">FACES</span>
-        <span class="preset-text" onclick="setPresetText('♥★')">SYMBOLS</span>
-        <span class="preset-text" onclick="setPresetText('[SYMBOLS]')">[SYMBOLS]</span>
-        <span class="preset-text" onclick="setPresetText('←→↑↓')">ARROWS</span>
-        <span class="preset-text" onclick="setPresetText('€£¥')">CURRENCY</span>
-        <span class="preset-text" onclick="setPresetText('┌──┐')">BOX</span>
-        <span class="preset-text" onclick="setPresetText('π×÷=')">MATH</span>
-    </div>
+        <div class="preset-texts">
+            <span class="preset-text" onclick="setPresetText('AWESOME!')">AWESOME!</span>
+            <span class="preset-text" onclick="setPresetText('BITMAP FONTS')">BITMAP FONTS</span>
+            <span class="preset-text" onclick="setPresetText('COOL TEXT!')">COOL TEXT!</span>
+            <span class="preset-text" onclick="setPresetText('12345')">12345</span>
+            <span class="preset-text" onclick="setPresetText('HELLO 2024!')">HELLO 2024!</span>
+            <span class="preset-text" onclick="setPresetText('@#$%&*')">@#$%&*</span>
+            <span class="preset-text" onclick="setPresetText('(^_^)')">HAPPY</span>
+            <span class="preset-text" onclick="setPresetText('☺☹')">FACES</span>
+            <span class="preset-text" onclick="setPresetText('♥★')">SYMBOLS</span>
+            <span class="preset-text" onclick="setPresetText('[SYMBOLS]')">[SYMBOLS]</span>
+            <span class="preset-text" onclick="setPresetText('←→↑↓')">ARROWS</span>
+            <span class="preset-text" onclick="setPresetText('€£¥')">CURRENCY</span>
+            <span class="preset-text" onclick="setPresetText('┌──┐')">BOX</span>
+            <span class="preset-text" onclick="setPresetText('π×÷=')">MATH</span>
+        </div>
 
-    <div class="output-container" id="previewContainer">
-        <button class="copy-button" onclick="copyOutput('output')">Copy</button>
-        <div id="output"></div>
+        <div class="output-container" id="previewContainer">
+            <button class="copy-button" onclick="copyOutput('output')">Copy</button>
+            <div id="output"></div>
+        </div>
     </div>
 
     <script type="module">
@@ -343,6 +418,88 @@
         function updateDisplay() {
             generateText();
         }
+
+        // Void space background animation
+        const grid = document.getElementById('grid');
+        const container = document.querySelector('.space-container');
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        // Track mouse position
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) / window.innerWidth;
+            mouseY = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+            
+            // Calculate target position with increased movement range
+            targetX = mouseX * 400;
+            targetY = mouseY * 400;
+        });
+
+        // Smooth animation loop
+        function animate() {
+            // Smooth interpolation
+            currentX += (targetX - currentX) * 0.05;
+            currentY += (targetY - currentY) * 0.05;
+
+            // Apply transform with perspective effect
+            grid.style.transform = `translate(-50%, -50%) 
+                                  translate3d(${currentX}px, ${currentY}px, 0)
+                                  rotateX(${-mouseY * 3}deg) 
+                                  rotateY(${mouseX * 3}deg)`;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Handle touch devices
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isDragging = false;
+        
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isDragging = true;
+            container.classList.add('dragging');
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            
+            const deltaX = (touchX - touchStartX) / window.innerWidth;
+            const deltaY = (touchY - touchStartY) / window.innerHeight;
+            
+            targetX += deltaX * 400;
+            targetY += deltaY * 400;
+            
+            touchStartX = touchX;
+            touchStartY = touchY;
+            
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            container.classList.remove('dragging');
+        });
+
+        // Add mouse events for cursor changes
+        container.addEventListener('mousedown', () => {
+            container.classList.add('dragging');
+        });
+
+        document.addEventListener('mouseup', () => {
+            container.classList.remove('dragging');
+        });
+
+        // Start animation
+        animate();
     </script>
 </body>
 </html> 

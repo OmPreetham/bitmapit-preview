@@ -1,20 +1,18 @@
 {
   "name": "bitmapit-preview",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.html",
-  "directories": {
-    "doc": "docs"
-  },
+  "description": "Bitmap font generator preview",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "http-server ."
+    "dev": "serve .",
+    "start": "serve .",
+    "build": "mkdir -p public && cp -r index.html node_modules public/",
+    "vercel-build": "npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "bitmapit": "^1.0.3"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
   }
 }
